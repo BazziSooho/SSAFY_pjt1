@@ -12,7 +12,7 @@
           <li><a href="#">베스트</a></li>
           <li><a href="#">근처 마트 찾기</a></li>
           <!-- 이벤트링크 추가할것 -->
-          <li><a id="important" href="/event/">적금이율 이벤트</a></li> 
+          <li><a href="/saving/add">적금이율 이벤트</a></li> 
         </ul>
   
       </div>

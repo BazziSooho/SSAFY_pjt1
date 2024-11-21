@@ -14,7 +14,7 @@ import { RouterLink, RouterView } from 'vue-router'
         <li><a href="#">특가</a></li>
         <li><a href="#">귤 특전</a></li>
         <!-- 이벤트링크 추가할것 -->
-        <li><RouterLink to="/event/">적금이율 이벤트</RouterLink></li> 
+        <li><RouterLink to="/saving/add">적금이율 이벤트</RouterLink></li> 
       </ul>
 
     </div>
