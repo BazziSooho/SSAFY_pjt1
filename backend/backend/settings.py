@@ -31,10 +31,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
     'accounts',
     'articles',
     'savings',
-    'corsheaders',
     'rest_framework',
     'rest_framework.authtoken',
     'dj_rest_auth',
@@ -54,9 +54,9 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -148,3 +148,19 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# 이메일 인증 관련 설정 (기본적으로 이메일 인증을 사용하지 않도록 설정)
+ACCOUNT_EMAIL_VERIFICATION = "none"  # 이메일 인증 비활성화
+ACCOUNT_EMAIL_REQUIRED = True       # 회원가입 시 이메일 필수 여부
+
+
+# 회원가입 후 자동 로그인 설정
+REST_AUTH_REGISTER_SERIALIZERS = {
+    "REGISTER_SERIALIZER": "dj_rest_auth.registration.serializers.RegisterSerializer",
+}
+
+# cors 인증 설정
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080",    # Vue.js의 도메인
+    "http://localhost:5173",
+]
