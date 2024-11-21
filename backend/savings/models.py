@@ -1,3 +1,4 @@
+# savings.models
 from django.db import models
 from django.conf import settings
 
@@ -47,7 +48,7 @@ class UserSaving(models.Model):
     bank = models.CharField(max_length=50)
     product = models.TextField()
     mtrt = models.FloatField()          # 만기후 이자율
-    join_deny = models.IntegerField()   # {1:제한없음, 2:서민전용, 3:일부제한}
+    join_deny = models.IntegerField()   # {1:제한없음, 3:일부제한}
     join_member = models.TextField()    # 1이 아닐때만 null=True
     max_limit = models.FloatField()     # 최대한도
 
