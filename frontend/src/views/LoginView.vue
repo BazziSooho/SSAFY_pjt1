@@ -1,117 +1,129 @@
-<template>
-    <div class="home-view">
-      <Navbar />  
-    </div>
-    <div class="login-container">
-      <h1>서비스를 이용하기 위해서는 로그인이 필요합니다. 로그인 해 주세요.</h1>
-      <h2>Login</h2>
-      <form @submit.prevent="login" class="login-form">
-        <div class="input-group">
-          <input 
-            type="text" 
-            v-model="username" 
-            id="username" 
-            placeholder="아이디 또는 이메일을 입력하세요" 
-            required 
-          />
-        </div>
-        <div class="input-group">
-          <input 
-            type="password" 
-            v-model="password" 
-            id="password" 
-            placeholder="비밀번호를 입력하세요" 
-            required 
-          />
-        </div>
-        <button type="submit" class="login-btn">로그인</button>
-        <p><RouterLink to='/signup/'>회원가입</RouterLink></p>
-  
-        <p v-if="errorMessage">{{ errorMessage }}</p>
-  
-      </form>
-    </div>
-  </template>
-  
-  <script>
-  import { RouterLink, RouterView } from 'vue-router'
-  import axios from 'axios';
-  import Navbar from '@/components/Navbar/HomeNavbar.vue';
-  
-  export default {
-    name: 'LoginView', // 컴포넌트 이름
-    components: {
-      Navbar, // Navbar 컴포넌트 등록
-    },
-    data() {
-      return {
-        username: '',
-        password: '',
-        rememberId: false,
-        autoLogin: false,
-        errorMessage: null,
-      };
-    },
-    methods: {
-      async login() {
-        try {
-          // 서버로 로그인 요청 전송
-          const response = await axios.post('http://localhost:8000/api/login/', {
-            username: this.username,
-            password: this.password,
-          });
-          
-          // 토큰 저장 (JWT 예시)
-          localStorage.setItem('token', response.data.token);
-  
-          // 성공 시 페이지 이동
-          this.$router.push('/main');
-        } catch (error) {
-          console.error(error);
-          this.errorMessage = '로그인에 실패했습니다. 다시 시도해주세요.';
+<script>
+import { useAuthStore } from "@/stores/auth"; // Pinia 스토어 가져오기
+import apiClient from "@/plugins/axios";
+import Navbar from "@/components/Navbar/HomeNavbar.vue";
+
+export default {
+  name: "LoginView",
+  components: {
+    Navbar,
+  },
+  data() {
+    return {
+      username: "",
+      password: "",
+      errorMessage: null,
+      isLoading: false,
+    };
+  },
+  methods: {
+    async login() {
+      this.isLoading = true;
+      try {
+        const response = await apiClient.post("accounts/login/", {
+          username: this.username,
+          password: this.password,
+        });
+
+        if (response.data.key) {
+          localStorage.setItem("token", response.data.key);
+          const authStore = useAuthStore();
+          authStore.login(response.data.key);
+
+          // 리다이렉트 경로가 있으면 해당 경로로 이동, 없으면 메인 페이지로 이동
+          const redirectPath = this.$route.query.redirect || "/";
+          this.$router.push(redirectPath);
+        } else {
+          this.errorMessage = "로그인에 실패했습니다.";
         }
-      },
+      } catch (error) {
+        this.errorMessage =
+          error.response?.data?.non_field_errors || "로그인에 실패했습니다.";
+      } finally {
+        this.isLoading = false;
+      }
     },
-  };
-  </script>
-  
-  <style scoped>
-  .login-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-  
-  .login-form {
-    width: 300px;
-  }
-  
-  .input-group {
-    margin-bottom: 15px;
-  }
-  
-  input[type="text"], input[type="password"] {
-    width: calc(100% - 20px); /* 양쪽 패딩을 고려한 너비 */
-    padding: 10px;
-    font-size: 14px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-  }
-  
-  .login-btn {
-    width: 100%;
-    padding: 10px;
-    background-color: #006a44; /* Green color */
-    color: white;
-    font-size: 16px;
-    border-radius: 4px;
-    border: none;
-  }
-  
-  </style>
+  },
+};
+</script>
+
+<template>
+  <div class="Navbar"><Navbar /></div>
+  <div class="login-container">
+    <h1>로그인</h1>
+    <form @submit.prevent="login">
+      <div class="input-group">
+        ID : <br>
+        <input
+          type="text"
+          v-model="username"
+          placeholder="아이디 또는 이메일을 입력하세요"
+          required
+        />
+      </div>
+      <div class="input-group">
+        Password : <br>
+        <input
+          type="password"
+          v-model="password"
+          placeholder="비밀번호를 입력하세요"
+          required
+        />
+      </div>
+      <button type="submit" class="login-btn">
+        <span v-if="isLoading">로그인 중...</span>
+        <span v-else>로그인</span>
+      </button>
+      <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
+    </form>
+  </div>
+</template>
+
+<style scoped>
+.login-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 수평 가운데 정렬 */
+  justify-content: flex-start; /* 수직 가운데 정렬 */
+  height: 100vh; /* 화면 전체 높이를 사용하여 중앙 정렬 */
+}
+
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+  width: 100%; /* 부모 컨테이너 너비에 맞춤 */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; 
+}
+
+input[type='text'],
+input[type='password'] {
+  width: 300px; /* 고정된 너비 설정 */
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.login-btn {
+  width: 100%; /* 버튼 너비를 입력 필드와 동일하게 설정 */
+  padding: 10px;
+  background-color: #006a44; /* 농협 초록 */
+  color: white;
+  font-size: 16px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+</style>

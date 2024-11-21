@@ -1,13 +1,21 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterLink, RouterView } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+
+const authStore = useAuthStore(); // Pinia 스토어 가져오기
+
+const logout = () => {
+  alert("로그아웃 되었습니다."),
+  authStore.logout(); // 로그아웃 처리
+  window.location.reload();
+};
 </script>
 
 <template>
   <header class="header">
-    <!-- 왼쪽 로고와 버튼 -->
     <div class="left-section">
       <RouterLink to="/">
-        <img src="@/assets/images/nhmall_logo.png" alt="농협몰 로고" class="logo">
+        <img src="@/assets/images/nhmall_logo.png" alt="농협몰 로고" class="logo" />
       </RouterLink>
       <div class="buttons">
         <RouterLink to="/"><button class="btn">산지직송</button></RouterLink>
@@ -16,30 +24,34 @@ import { RouterLink, RouterView } from 'vue-router'
       </div>
     </div>
 
-    <!-- 오른쪽 네비게이션 및 아이콘 -->
     <nav class="right-section">
-      <img src="@/assets/images/nh_logo.png" style="width: 130px; height: auto;">
-      <RouterLink to="/login">로그인</RouterLink>
-      <RouterLink to="/signup">회원가입</RouterLink>
-      <RouterLink to="/support">문의게시판</RouterLink>
+      <img src="@/assets/images/nh_logo.png" style="width: 130px; height: auto;" />
 
+      <!-- 로그인 상태에 따라 UI 변경 -->
+      <template v-if="authStore.isLoggedIn">
+        <RouterLink to="/mypage">마이페이지</RouterLink>
+        <a href="/" @click.prevent="logout">로그아웃</a>
+      </template>
+      <template v-else>
+        <RouterLink to="/accounts/login">로그인</RouterLink>
+        <RouterLink to="/accounts/signup">회원가입</RouterLink>
+      </template>
+
+      <RouterLink to="/articles">문의게시판</RouterLink>
     </nav>
   </header>
 
   <RouterView />
-  
 </template>
-
-
 
 <style scoped>
 /* 전체 헤더 */
 .header {
   display: flex;
-  justify-content: space-between; /* 좌우 섹션을 양 끝에 배치 */
-  align-items: center; /* 세로 중앙 정렬 */
+  justify-content: space-between;
+  align-items: center;
   padding: 1rem 2rem;
-  background-color: white; /* 배경색 설정 */
+  background-color: white;
 }
 
 /* 왼쪽 섹션 (로고와 버튼) */
@@ -49,13 +61,13 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .logo {
-  width: 150px; /* 로고 크기 조정 */
-  margin-right: 1rem; /* 로고와 버튼 사이 간격 */
+  width: 150px;
+  margin-right: 1rem;
 }
 
 .buttons {
   display: flex;
-  gap: 0.5rem; /* 버튼 간의 간격 설정 */
+  gap: 0.5rem;
 }
 
 .btn {
@@ -73,26 +85,12 @@ import { RouterLink, RouterView } from 'vue-router'
 }
 
 .right-section a {
-  margin-left: 1rem; /* 링크 간의 간격 */
+  margin-left: 1rem;
   text-decoration: none;
-  color: #333; /* 텍스트 색상 */
+  color: #333;
 }
 
 .right-section a:hover {
-  color: #007bff; /* 호버 시 색상 변경 */
-}
-
-/* 아이콘 섹션 */
-.icons {
-  display: flex;
-  align-items: center;
-}
-
-.icons i {
-  font-size: 1.2rem; /* 아이콘 크기 조정 */
-}
-
-.icons a {
-  margin-left: 1rem; /* 아이콘 링크 간의 간격 */
+  color: #007bff;
 }
 </style>
