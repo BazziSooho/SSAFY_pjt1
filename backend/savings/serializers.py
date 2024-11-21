@@ -19,7 +19,7 @@ class UserSavingSerializer(serializers.ModelSerializer):        # 유저 입력�
     class Meta:
         model = UserSaving
         fields = '__all__'
-        read_only = ('user')
+        read_only_fields = ['user']
 
 
 

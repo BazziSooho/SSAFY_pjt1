@@ -1,11 +1,11 @@
 <script>
 import { useAuthStore } from "@/stores/auth"; // Pinia 스토어 가져오기
 import apiClient from "@/plugins/axios";
-import Navbar from "@/components/Navbar/HomeNavbar.vue";
+import Navbar from "@/components/Navbar/HomeNavbar.vue"
 
 export default {
   name: "LoginView",
-  components: {
+  components : {
     Navbar,
   },
   data() {
@@ -19,26 +19,28 @@ export default {
   methods: {
     async login() {
       this.isLoading = true;
+      const authStore = useAuthStore(); // Pinia 스토어 인스턴스
+
       try {
+        // Django 서버로 로그인 요청
         const response = await apiClient.post("accounts/login/", {
           username: this.username,
           password: this.password,
         });
 
         if (response.data.key) {
+          // 토큰을 localStorage에 저장 및 Pinia 상태 업데이트
           localStorage.setItem("token", response.data.key);
-          const authStore = useAuthStore();
-          authStore.login(response.data.key);
+          authStore.login(response.data.key); // Pinia 상태 업데이트
 
-          // 리다이렉트 경로가 있으면 해당 경로로 이동, 없으면 메인 페이지로 이동
-          const redirectPath = this.$route.query.redirect || "/";
-          this.$router.push(redirectPath);
+          // 로그인 성공 후 리다이렉트
+          this.$router.push("/");
         } else {
           this.errorMessage = "로그인에 실패했습니다.";
         }
       } catch (error) {
-        this.errorMessage =
-          error.response?.data?.non_field_errors || "로그인에 실패했습니다.";
+        console.error("로그인 실패:", error.response?.data || error.message);
+        this.errorMessage = "로그인에 실패했습니다.";
       } finally {
         this.isLoading = false;
       }
