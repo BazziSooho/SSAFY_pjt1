@@ -19,6 +19,9 @@ class UserSavingSerializer(serializers.ModelSerializer):        # 유저 입력�
     class Meta:
         model = UserSaving
         fields = '__all__'
+        read_only = ('user')
+
+
 
 class SavingProductWithInterestSerializer(serializers.ModelSerializer):   # 적금이율정보
 
