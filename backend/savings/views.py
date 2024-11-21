@@ -16,10 +16,12 @@ def user_saving(request):      # 입력받는 창 & 입력 받은 데이터 전�
     if request.method == 'GET':
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == 'POST':
+        # 요청 데이터를 시리얼라이저로 전달
         serializer = UserSavingSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save(user=request.user)
+        if serializer.is_valid():
+            serializer.save(user=request.user)  # 현재 로그인한 유저 정보와 함께 저장
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # @api_view(['GET', 'POST'])

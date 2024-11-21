@@ -34,7 +34,7 @@ const router = createRouter({
       component: LoginView,
     },
     {
-      path: '/saving/add',
+      path: '/savings/add',
       name: 'savingadd',
       component: SavingAddView,
       meta: { requiresAuth: true },

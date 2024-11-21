@@ -1,19 +1,17 @@
-// src/plugins/axios.js
-import axios from 'axios';
+import axios from "axios";
 
-// Axios 인스턴스 생성
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/', // Django 백엔드 API 기본 URL
+  baseURL: "http://localhost:8000/", // Django API 기본 URL
   headers: {
-    'Content-Type': 'application/json', // 모든 요청에 JSON 형식 사용
+    "Content-Type": "application/json",
   },
 });
 
-// 요청 인터셉터: 토큰 추가
+// 요청 인터셉터: Authorization 헤더 추가
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token'); // 로컬 스토리지에 저장된 JWT 토큰 가져오기
+  const token = localStorage.getItem("token"); // localStorage에서 토큰 가져오기
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`; // Authorization 헤더 추가
+    config.headers.Authorization = `Token ${token}`; // Authorization 헤더 추가
   }
   return config;
 });
