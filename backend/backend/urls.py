@@ -22,5 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/signup/', include('dj_rest_auth.registration.urls')),    # 회원가입 관련 url
     path('accounts/', include('dj_rest_auth.urls')),                        # 로그인/아웃, 비번 등 이외의 url
-#     path('profile/', views.profile, name='profile'),
+    path('savings/', include('savings.urls')),
+    #     path('profile/', views.profile, name='profile'),
 ]
