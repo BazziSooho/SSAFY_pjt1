@@ -4,8 +4,50 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import render
 from .models import SavingProduct, ProductInterest, UserSaving
-from .serializers import UserSavingSerializer, ProductInterestSerializer
+from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer
 from accounts.serializers import UserWithSavingSerializer
+import random
+
+# recommendation functions for views
+def max_profit():           # 만기 시 최대이익인 적금을 serializer로 리턴
+    product_details = ProductInterest.objects.all() 
+    for product_detail in product_details:
+        product = product_detail.fin_prdt_cd        # 해당 상세정보의 원 상품(foreignkey로 연결된 savingproduct)
+        current_max = 0
+
+        max_limit = product.max_limit               # 최대 한도
+        interest = product_detail.intr_rate2/100    # 최대 이율
+        exp_month = product_detail.save_trm         # 저축 기간
+        intr_type = product_detail.intr_rate_type   # 단리/복리
+
+        if intr_type == 'S':    # 단리일때
+            exp_money = max_limit*exp_month + (1+exp_month)//2*max_limit*interest
+        else:                   # 복리일때
+            exp_money = 0
+            for i in range(1, exp_month+1):
+                current_interest = (1+interest)**i
+                exp_money += max_limit*current_interest
+        
+        if exp_money > current_max:
+            current_max = exp_money
+            serializer = SavingProductWithInterestSerializer(fin_prdt_cd=product)
+        
+    return serializer
+
+def gacha():           # 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
+    product_details = ProductInterest.objects.all()
+    random_pick = random.choice(product_details)
+    serializer = SavingProductWithInterestSerializer(random_pick)
+    return serializer
+
+def high_score():
+
+    pass
+
+def high_similarity():
+    pass
+
+
 
 # Create your views here.
 
@@ -40,12 +82,17 @@ def savings_recommendation(request):
 def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     interest = request.data.get('intr')
     print(interest)
-    # 1. 가중치 추천
+    # 1. 가중치 추천 - 각 param마다 이익 점수 설정
 
-    # 2. 만기 시 최대 이익 추천
-
-    # 3. 만기 후 1년 최대 이익 추천
-
-    max_intr = ProductInterest.objects.aggregate(max('intr_rate2'))
-    serializer = ProductInterestSerializer(intr_rate2=max_intr)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    # 1.1 유사도 추천 - 각 param마다 얼마나 유사한 지를 기준으로 가중치
+        
+    # 2. 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
+    random_serializer = gacha()
+    # 3. 만기 시 최대 이익 추천 - 단리/복리에 따라 계산달리해서 추천
+    max_serializer = max_profit()
+    
+    return Response({
+        'random_data': random_serializer,
+        'max_data': max_serializer,
+        }, 
+        status=status.HTTP_200_OK)
