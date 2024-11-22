@@ -3,8 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import render
-from .models import SavingProduct
-from .serializers import UserSavingSerializer
+from .models import SavingProduct, ProductInterest, UserSaving
+from .serializers import UserSavingSerializer, ProductInterestSerializer
+from accounts.serializers import UserWithSavingSerializer
 
 # Create your views here.
 
@@ -24,47 +25,21 @@ def user_saving(request):      # 입력받는 창 & 입력 받은 데이터 전�
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['GET', 'POST'])
-# def book_list(request):
-#     if request.method == 'GET':
-#         books = Book.objects.all()
-#         serializer = BookListSerializer(books, many=True)
-#         return Response(serializer.data)
-    
-#     elif request.method == 'POST':
-#         serializer = BookSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+@api_view(['GET'])         # 적금 추천 해달라하는 창 - 어떤 적금 할건지 선택해서 추천 버튼 꾹
+@permission_classes([IsAuthenticated])
+def savings_recommendation(request):
+    user = request.user
+    if UserSavingSerializer(user.pk):                   # user가 입력한 적금이 있다면
+        serializer = UserWithSavingSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:                                               # 적금이 없으면 아래 메세지를 띄우면서 추천 버튼 비활성화해야함
+        return Response({"message": "적합한 추천 상품을 찾을 수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
-# @api_view(['GET', 'DELETE'])
-# def book_detail(request, book_pk):
-#     book = Book.objects.get(pk=book_pk)
-#     if request.method == 'GET':
-#         serializer = BookSerializer(book)
-#         return Response(serializer.data)
-    
-#     elif request.method == 'DELETE':
-#         book.delete()
-#         data = {
-#             'delete': f'도서 고유 번호 {book.isbn}번의 {book.title}을 삭제하였습니다.'
-#         }
-#         return Response(data, status=status.HTTP_204_NO_CONTENT)
-
-
-# @api_view(['GET'])
-# def review_list(request):
-#     if request.method == 'GET':
-#         reviews = Review.objects.all()
-#         serializer = ReviewListSerializer(reviews, many=True)
-#         return Response(serializer.data)
-    
-
-# @api_view(['POST'])
-# def review_create(request, book_pk):
-#     book = Book.objects.get(pk=book_pk)
-#     if request.method == 'POST':
-#         serializer = ReviewSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save(book=book)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
+    interest = request.data.get('intr')
+    print(interest)
+    max_intr = ProductInterest.objects.aggregate(max('intr_rate2'))
+    serializer = ProductInterestSerializer(intr_rate2=max_intr)
+    return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import SavingProduct, ProductInterest, UserSaving
+from accounts.serializers import UserSerializer
 
 
 class ProductInterestSerializer(serializers.ModelSerializer):   # 이율 정보

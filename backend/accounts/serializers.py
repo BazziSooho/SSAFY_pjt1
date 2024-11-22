@@ -5,8 +5,16 @@ from articles.models import Question
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class UserWithSavingSerializer(serializers.ModelSerializer):
     usersaving_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = User
+        fields = '__all__'
+        read_only_fields = ('id',)
+
+
+class UserwithQuestionSerializer(serializers.ModelSerializer):
     question_set = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     class Meta:
