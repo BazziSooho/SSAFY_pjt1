@@ -40,6 +40,12 @@ def savings_recommendation(request):
 def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     interest = request.data.get('intr')
     print(interest)
+    # 1. 가중치 추천
+
+    # 2. 만기 시 최대 이익 추천
+
+    # 3. 만기 후 1년 최대 이익 추천
+
     max_intr = ProductInterest.objects.aggregate(max('intr_rate2'))
     serializer = ProductInterestSerializer(intr_rate2=max_intr)
     return Response(serializer.data, status=status.HTTP_200_OK)
