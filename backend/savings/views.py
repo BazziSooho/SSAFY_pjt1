@@ -40,14 +40,52 @@ def gacha():           # 랜덤픽 - 고민하기 싫은 사람들을 위한 최
     serializer = SavingProductWithInterestSerializer(random_pick)
     return serializer
 
-def high_score():
+def high_score(pk):       # 유저가 선택한 적금 정보대로
+    product_details = ProductInterest.objects.all()
+    user_saving = UserSaving(pk=pk)
+    if user_saving.join_deny != 1:
+        product_details = ProductInterest.objects.exclude(fin_prdt_cd__join_deny=1)     # join_deny가 1이 아닌 상품들만 쿼리로 추출
+    user_limit = user_saving.max_limit
+    user_intr = user_saving.intr
+    user_intr_type = user_saving.intr_rate_type
+    user_saving_type = user_saving.rsrv_type
+    user_exp_month = user_saving.save_trm
+    
+    high_score = 0
+    
+    for product_detail in product_details:
+        product = product_detail.fin_prdt_cd        # 해당 상세정보의 원 상품(foreignkey로 연결된 savingproduct)
+        prdt_limit = product_detail.fin_prdt_cd.max_limit
+        prdt_intr = product_detail.intr_rate
+        prdt_intr_type = product_detail.intr_rate_type
+        prdt_saving_type = product_detail.rsrv_type
+        prdt_exp_month = product_detail.save_trm
 
-    pass
+        score = 0
+        intr_ratio = prdt_intr / user_intr
+        limit_ratio = prdt_limit / user_limit
+        exp_ratio = prdt_exp_month / user_exp_month
 
-def high_similarity():
-    pass
+        if user_intr_type == prdt_intr_type and user_intr_type == 'S':      # 둘다 단리일때
+            score += intr_ratio * limit_ratio * exp_ratio
+            score += 3
+        elif user_intr_type == prdt_intr_type and user_intr_type == 'M':    # 둘다 복리일때
+            score += limit_ratio * (intr_ratio ** exp_ratio)
+            score += 3
+        elif user_intr_type == 'S' and prdt_intr_type == 'M':               # 유저는 단리 상품은 복리일때
+            limit_ratio * intr_ratio
+        else:                                                               # 유저가 복리고 상품은 단리일때(구려서 패스)
+            continue
 
+        if user_saving_type == prdt_saving_type:                            # 저축 방식이 같으면 가산점 왕창
+            score += 10
 
+        if score > high_score:
+            high_score = score
+            serializer = SavingProductWithInterestSerializer(fin_prdt_cd=product)
+        
+        
+    return serializer
 
 # Create your views here.
 
@@ -82,8 +120,8 @@ def savings_recommendation(request):
 def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     interest = request.data.get('intr')
     print(interest)
-    # 1. 가중치 추천 - 각 param마다 이익 점수 설정
-
+    # 1. 가중치 추천 - 각 param마다 이익 점수 설정/ pk 값 받아서
+    high_score_serializer = high_score(pk)
     # 1.1 유사도 추천 - 각 param마다 얼마나 유사한 지를 기준으로 가중치
         
     # 2. 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
