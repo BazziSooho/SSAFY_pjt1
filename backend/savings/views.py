@@ -6,7 +6,7 @@ from django.shortcuts import render
 from .models import SavingProduct, ProductInterest, UserSaving
 from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer
 from accounts.serializers import UserWithSavingSerializer
-import random
+import random, requests
 
 # recommendation functions for views
 def max_profit():           # 만기 시 최대이익인 적금을 serializer로 리턴
@@ -115,13 +115,45 @@ def savings_recommendation(request):
     else:                                               # 적금이 없으면 아래 메세지를 띄우면서 추천 버튼 비활성화해야함
         return Response({"message": "적합한 추천 상품을 찾을 수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['GET'])
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
+    api_url = 'http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json'
+    api_key = '1c1cffc2a23cbe61a88b8ea749f7a10a'
+
+    params = {
+        'auth': api_key,
+        'topFinGrpNo': '020000',
+        'pageNo': '1',
+    }
+
+    response = requests.get(api_url, params=params)
+    data = response.json()
+    print(data)
+
+    # # print(data['result']['baseList'])
+    savings = data['result']['baseList']
+    saving_list = []
+
+    for saving in savings:
+        new_data = {"model": "savings.savingproduct"}
+        new_data['fields'] = saving
+        saving_list.append(new_data)
+    print(saving_list)
+
+    rate_list = []
+    rates = data['result']['optionList']
+    for rate in rates:
+        rate_data = {"model": "savings.productinterest"}
+        rate_data['fields'] = rate
+        rate_list.append(rate_data)
+
+
+
     interest = request.data.get('intr')
     print(interest)
     # 1. 가중치 추천 - 각 param마다 이익 점수 설정/ pk 값 받아서
-    high_score_serializer = high_score(pk)
+    high_score_serializer = high_score(request.user.pk)
     # 1.1 유사도 추천 - 각 param마다 얼마나 유사한 지를 기준으로 가중치
         
     # 2. 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
