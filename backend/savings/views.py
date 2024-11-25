@@ -130,6 +130,7 @@ def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     max_serializer = max_profit()
     
     return Response({
+        'high_score': high_score_serializer,
         'random_data': random_serializer,
         'max_data': max_serializer,
         }, 
