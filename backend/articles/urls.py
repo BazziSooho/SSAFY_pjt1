@@ -4,8 +4,7 @@ from . import views
 app_name = 'savings'
 
 urlpatterns = [
-    path('add/', views.user_saving, name='user-saving'),
-    path('add/', views.user_saving, name='user-saving'),
+    path('ask/', views.question_list, name='question_list'),
+    path('answer/', views.question_detail, name='question_detail'),
     path('compare/', views.user_saving, name='user-saving'),
-
 ]
