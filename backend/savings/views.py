@@ -113,7 +113,7 @@ def savings_recommendation(request):
         serializer = UserWithSavingSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     else:                                               # 적금이 없으면 아래 메세지를 띄우면서 추천 버튼 비활성화해야함
-        return Response({"message": "적합한 추천 상품을 찾을 수 없습니다."}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "추천에 필요한 본인의 적금 정보를 먼저 입력해주세요."}, status=status.HTTP_204_NO_CONTENT)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
