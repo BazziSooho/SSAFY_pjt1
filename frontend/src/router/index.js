@@ -6,6 +6,8 @@ import MartView from '@/views/MartView.vue'
 import LoginView from '@/views/LoginView.vue'
 import SignupView from '@/views/SignupView.vue'
 import SavingAddView from '@/views/SavingAddView.vue'
+import SavingsList from '@/components/savings/SavingsList.vue'
+import OptionsList from '@/components/savings/OptionsList.vue'
 // import SupportView from '@/views/SupportView.vue'
 // import ProfileView from '@/views/ProfileView.vue'
 // import MapView from '@/views/MapView.vue'
@@ -37,8 +39,20 @@ const router = createRouter({
       path: '/savings/add',
       name: 'savingadd',
       component: SavingAddView,
+      props: true,
       meta: { requiresAuth: true },
     },
+    {
+      path: "/savings/list",
+      name: "SavingsList",
+      component: SavingsList,
+    },
+    {
+      path: "/savings/list/:id/options",
+      name: "OptionsList",
+      component: OptionsList,
+      props: (route) => ({ id: Number(route.params.id) }), // 숫자로 변환
+    },    
     {
       path: '/accounts/signup',
       name: 'signup',

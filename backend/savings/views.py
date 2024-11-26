@@ -4,9 +4,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import render
 from .models import SavingProduct, ProductInterest, UserSaving
-from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer
+from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer, SavingProductSerializer
 from accounts.serializers import UserWithSavingSerializer
+from django.http import JsonResponse
 import random
+
 
 # recommendation functions for views
 def max_profit():           # 만기 시 최대이익인 적금을 serializer로 리턴
@@ -96,3 +98,55 @@ def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
         'max_data': max_serializer,
         }, 
         status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def savingproduct(request) :    # 적금 전체 리스트 보여주는 view
+    products = SavingProduct.objects.all().values()
+    return JsonResponse(list(products), safe=False)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def savingproductinterest(request, product_id):
+    try:
+        # SavingProduct의 id로 해당 상품 가져오기
+        product = SavingProduct.objects.get(id=product_id)
+        fin_prdt_cd = product.fin_prdt_cd  # 참조되는 fin_prdt_cd 가져오기
+
+        # ProductInterest에서 해당 상품(fin_prdt_cd)의 옵션 데이터 가져오기
+        options = ProductInterest.objects.filter(fin_prdt_cd=fin_prdt_cd).values()
+
+        return JsonResponse({"options": list(options)}, safe=False)
+    except SavingProduct.DoesNotExist:
+        return JsonResponse({"error": "해당 상품을 찾을 수 없습니다."}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def save_usersaving(request):
+    try:
+        data = request.data
+        user = request.user
+
+        for item in data:
+            print("Saving data:", item)  # 디버깅 출력
+            UserSaving.objects.create(
+                user_id=user.id,
+                bank=item.get('bank'),
+                product=item.get('product'),
+                mtrt=item.get('mtrt'),
+                intr=item.get('intr'),
+                join_deny=item.get('join_deny'),
+                join_member=item.get('join_member'),
+                max_limit=item.get('max_limit'),
+                intr_rate_type=item.get('intr_rate_type'),
+                rsrv_type=item.get('rsrv_type')
+            )
+
+        return Response({"message": "저장되었습니다."}, status=201)
+    except Exception as e:
+        print("Error:", str(e))  # 오류 출력
+        return Response({"error": str(e)}, status=400)
