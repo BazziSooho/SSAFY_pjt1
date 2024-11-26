@@ -9,8 +9,9 @@ import SavingAddView from '@/views/SavingAddView.vue'
 import SavingsList from '@/components/savings/SavingsList.vue'
 import OptionsList from '@/components/savings/OptionsList.vue'
 import RecommendView from '@/views/RecommendView.vue'
-// import ProfileView from '@/views/ProfileView.vue'
-// import MapView from '@/views/MapView.vue'
+import QuestionList from '@/components/articles/QuestionList.vue'
+import QuestionDetail from '@/components/articles/QuestionDetail.vue'
+import CreateQuestion from '@/components/articles/CreateQuestion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,12 +66,19 @@ const router = createRouter({
       props: true,
       meta: { requiresAuth: true },
     },
-    // {
-    //   path: '/support',
-    //   name: 'support',
-    //   component: SupportView,
-    //   meta: { requiresAuth: true },
-    // },
+    {
+      path: "/articles/",
+      component : QuestionList,
+    },
+    {
+      path: '/articles/question/:id',
+      component: QuestionDetail,
+      props: true,
+    },
+    {
+      path: '/articles/create-question/',
+      component: CreateQuestion,
+    },
   ],
 })
 

@@ -37,7 +37,7 @@ const logout = () => {
         <RouterLink to="/accounts/signup">회원가입</RouterLink>
       </template>
 
-      <RouterLink to="#">문의게시판</RouterLink>
+      <RouterLink to="/articles/">문의게시판</RouterLink>
     </nav>
   </header>
 
