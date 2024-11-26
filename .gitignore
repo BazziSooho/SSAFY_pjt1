@@ -456,3 +456,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,visualstudiocode,python,venv,django
+
+# 테스트 파일 제거용
+backend/test.py

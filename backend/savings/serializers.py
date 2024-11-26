@@ -1,11 +1,6 @@
 from rest_framework import serializers
 from .models import SavingProduct, ProductInterest, UserSaving
 
-class SavingProductSerializer(serializers.ModelSerializer):     # 적금 상품
-
-    class Meta:
-        model = SavingProduct
-        fields = '__all__'
 
 class ProductInterestSerializer(serializers.ModelSerializer):   # 이율 정보
 
@@ -13,6 +8,11 @@ class ProductInterestSerializer(serializers.ModelSerializer):   # 이율 정보
         model = ProductInterest
         fields = '__all__'
 
+class SavingProductSerializer(serializers.ModelSerializer):     # 적금 상품
+
+    class Meta:
+        model = SavingProduct
+        fields = '__all__'
 
 class UserSavingSerializer(serializers.ModelSerializer):        # 유저 입력정보
 

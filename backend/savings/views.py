@@ -3,8 +3,90 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import render
-from .models import SavingProduct
-from .serializers import UserSavingSerializer
+from django.http import JsonResponse
+from .models import SavingProduct, ProductInterest, UserSaving
+from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer
+from accounts.serializers import UserWithSavingSerializer
+import random, requests
+
+# recommendation functions for views
+def max_profit():           # 만기 시 최대이익인 적금을 serializer로 리턴
+    product_details = ProductInterest.objects.all() 
+    for product_detail in product_details:
+        product = product_detail.fin_prdt_cd        # 해당 상세정보의 원 상품(foreignkey로 연결된 savingproduct)
+        current_max = 0
+
+        max_limit = product.max_limit               # 최대 한도
+        interest = product_detail.intr_rate2/100    # 최대 이율
+        exp_month = product_detail.save_trm         # 저축 기간
+        intr_type = product_detail.intr_rate_type   # 단리/복리
+
+        if intr_type == 'S':    # 단리일때
+            exp_money = max_limit*exp_month + (1+exp_month)//2*max_limit*interest
+        else:                   # 복리일때
+            exp_money = 0
+            for i in range(1, exp_month+1):
+                current_interest = (1+interest)**i
+                exp_money += max_limit*current_interest
+        
+        if exp_money > current_max:
+            current_max = exp_money
+            serializer = SavingProductWithInterestSerializer(fin_prdt_cd=product)
+        
+    return serializer
+
+def gacha():           # 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
+    product_details = ProductInterest.objects.all()
+    random_pick = random.choice(product_details)
+    serializer = SavingProductWithInterestSerializer(random_pick)
+    return serializer
+
+def high_score(pk):       # 유저가 선택한 적금 정보대로
+    product_details = ProductInterest.objects.all()
+    user_saving = UserSaving(pk=pk)
+    if user_saving.join_deny != 1:
+        product_details = ProductInterest.objects.exclude(fin_prdt_cd__join_deny=1)     # join_deny가 1이 아닌 상품들만 쿼리로 추출
+    user_limit = user_saving.max_limit
+    user_intr = user_saving.intr
+    user_intr_type = user_saving.intr_rate_type
+    user_saving_type = user_saving.rsrv_type
+    user_exp_month = user_saving.save_trm
+    
+    high_score = 0
+    
+    for product_detail in product_details:
+        product = product_detail.fin_prdt_cd        # 해당 상세정보의 원 상품(foreignkey로 연결된 savingproduct)
+        prdt_limit = product_detail.fin_prdt_cd.max_limit
+        prdt_intr = product_detail.intr_rate
+        prdt_intr_type = product_detail.intr_rate_type
+        prdt_saving_type = product_detail.rsrv_type
+        prdt_exp_month = product_detail.save_trm
+
+        score = 0
+        intr_ratio = prdt_intr / user_intr
+        limit_ratio = prdt_limit / user_limit
+        exp_ratio = prdt_exp_month / user_exp_month
+
+        if user_intr_type == prdt_intr_type and user_intr_type == 'S':      # 둘다 단리일때
+            score += intr_ratio * limit_ratio * exp_ratio
+            score += 3
+        elif user_intr_type == prdt_intr_type and user_intr_type == 'M':    # 둘다 복리일때
+            score += limit_ratio * (intr_ratio ** exp_ratio)
+            score += 3
+        elif user_intr_type == 'S' and prdt_intr_type == 'M':               # 유저는 단리 상품은 복리일때
+            limit_ratio * intr_ratio
+        else:                                                               # 유저가 복리고 상품은 단리일때(구려서 패스)
+            continue
+
+        if user_saving_type == prdt_saving_type:                            # 저축 방식이 같으면 가산점 왕창
+            score += 10
+
+        if score > high_score:
+            high_score = score
+            serializer = SavingProductWithInterestSerializer(fin_prdt_cd=product)
+        
+        
+    return serializer
 
 # Create your views here.
 
@@ -24,47 +106,66 @@ def user_saving(request):      # 입력받는 창 & 입력 받은 데이터 전�
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# @api_view(['GET', 'POST'])
-# def book_list(request):
-#     if request.method == 'GET':
-#         books = Book.objects.all()
-#         serializer = BookListSerializer(books, many=True)
-#         return Response(serializer.data)
+@api_view(['GET'])         # 적금 추천 해달라하는 창 - 어떤 적금 할건지 선택해서 추천 버튼 꾹
+@permission_classes([IsAuthenticated])
+def savings_recommendation(request):
+    user = request.user
+    if UserSavingSerializer(user.pk):                   # user가 입력한 적금이 있다면
+        serializer = UserWithSavingSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    else:                                               # 적금이 없으면 아래 메세지를 띄우면서 추천 버튼 비활성화해야함
+        return Response({"message": "추천에 필요한 본인의 적금 정보를 먼저 입력해주세요."}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
+    api_url = 'http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json'
+    api_key = '1c1cffc2a23cbe61a88b8ea749f7a10a'
+
+    params = {
+        'auth': api_key,
+        'topFinGrpNo': '020000',
+        'pageNo': '1',
+    }
+
+    response = requests.get(api_url, params=params)
+    if response.status_code == 200:
+        api_data = response.json()
+    else:
+        return JsonResponse({"error": "적금 정보를 불러오는 데 실패했습니다."}, status=500)
     
-#     elif request.method == 'POST':
-#         serializer = BookSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    # savings = data['result']['baseList']
+    # saving_list = []
+    # for saving in savings:
+    #     new_data = {"model": "savings.savingproduct"}
+    #     new_data['fields'] = saving
+    #     saving_list.append(new_data)
 
-# @api_view(['GET', 'DELETE'])
-# def book_detail(request, book_pk):
-#     book = Book.objects.get(pk=book_pk)
-#     if request.method == 'GET':
-#         serializer = BookSerializer(book)
-#         return Response(serializer.data)
+    # rate_list = []
+    # rates = data['result']['optionList']
+    # for rate in rates:
+    #     rate_data = {"model": "savings.productinterest"}
+    #     rate_data['fields'] = rate
+    #     rate_list.append(rate_data)
+
+
+    interest = request.data.get('intr')
+    print(interest)
+    # 1. 가중치 추천 - 각 param마다 이익 점수 설정/ pk 값 받아서
+    high_score_serializer = high_score(request.user.pk)
+    # 1.1 유사도 추천 - 각 param마다 얼마나 유사한 지를 기준으로 가중치
+        
+    # 2. 랜덤픽 - 고민하기 싫은 사람들을 위한 최적의 픽
+    random_serializer = gacha()
+    # 3. 만기 시 최대 이익 추천 - 단리/복리에 따라 계산달리해서 추천
+    max_serializer = max_profit()
     
-#     elif request.method == 'DELETE':
-#         book.delete()
-#         data = {
-#             'delete': f'도서 고유 번호 {book.isbn}번의 {book.title}을 삭제하였습니다.'
-#         }
-#         return Response(data, status=status.HTTP_204_NO_CONTENT)
-
-
-# @api_view(['GET'])
-# def review_list(request):
-#     if request.method == 'GET':
-#         reviews = Review.objects.all()
-#         serializer = ReviewListSerializer(reviews, many=True)
-#         return Response(serializer.data)
     
 
-# @api_view(['POST'])
-# def review_create(request, book_pk):
-#     book = Book.objects.get(pk=book_pk)
-#     if request.method == 'POST':
-#         serializer = ReviewSerializer(data=request.data)
-#         if serializer.is_valid(raise_exception=True):
-#             serializer.save(book=book)
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return JsonResponse({
+        'high_score': high_score_serializer.data,
+        'random_data': random_serializer.data,
+        'max_data': max_serializer.data,
+        '시중 적금데이터': api_data,
+        }, 
+        status=status.HTTP_200_OK)

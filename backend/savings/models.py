@@ -1,3 +1,4 @@
+# savings.models
 from django.db import models
 from django.conf import settings
 
@@ -29,10 +30,10 @@ class ProductInterest(models.Model):
     fin_prdt_cd = models.ForeignKey(SavingProduct, on_delete=models.CASCADE, to_field='fin_prdt_cd')        # 금융상품코드
     dcls_month = models.IntegerField()      # 공시제출월
     fin_co_no = models.IntegerField()       # 금융회사코드
-    intr_rate_type = models.CharField(max_length=10)
-    intr_rate_type_nm = models.TextField(verbose_name='금리 유형')
-    rsrv_type = models.CharField(max_length=10)
-    rsrv_type_nm = models.TextField(verbose_name='적립유형')
+    intr_rate_type = models.CharField(max_length=10, verbose_name='금리 유형')
+    intr_rate_type_nm = models.TextField()
+    rsrv_type = models.CharField(max_length=10, verbose_name='적립유형')
+    rsrv_type_nm = models.TextField()
     save_trm = models.IntegerField(verbose_name='저축기간')
     intr_rate = models.FloatField(verbose_name='최저금리')
     intr_rate2 = models.FloatField(verbose_name='최고금리')
@@ -47,9 +48,14 @@ class UserSaving(models.Model):
     bank = models.CharField(max_length=50)
     product = models.TextField()
     mtrt = models.FloatField()          # 만기후 이자율
-    join_deny = models.IntegerField()   # {1:제한없음, 2:서민전용, 3:일부제한}
+    join_deny = models.IntegerField()   # {1:제한없음``, 3:일부제한}
     join_member = models.TextField()    # 1이 아닐때만 null=True
     max_limit = models.FloatField()     # 최대한도
+    intr = models.FloatField()          # 본인이자율
+    intr_rate_type = models.CharField(max_length=10, verbose_name='금리 유형')   # 금리유형/ 단리복리
+    rsrv_type = models.CharField(max_length=10, verbose_name='적립유형')        # 적립 유형/ 자유형, 정액형
+    save_trm = models.IntegerField(verbose_name='저축기간')
+
 
 class Recommendation(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
