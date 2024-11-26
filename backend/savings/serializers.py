@@ -2,12 +2,6 @@ from rest_framework import serializers
 from .models import SavingProduct, ProductInterest, UserSaving
 
 
-class ProductInterestSerializer(serializers.ModelSerializer):   # 이율 정보
-
-    class Meta:
-        model = ProductInterest
-        fields = '__all__'
-
 class SavingProductSerializer(serializers.ModelSerializer):     # 적금 상품
 
     class Meta:
@@ -22,13 +16,18 @@ class UserSavingSerializer(serializers.ModelSerializer):        # 유저 입력�
         read_only_fields = ['user']
 
 
+class ProductInterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductInterest
+        fields = ['id', 'intr_rate', 'intr_rate2', 'save_trm', 'intr_rate_type', 'rsrv_type']
 
-class SavingProductWithInterestSerializer(serializers.ModelSerializer):   # 적금이율정보
 
+class SavingProductWithInterestSerializer(serializers.ModelSerializer):
     productinterest_set = ProductInterestSerializer(many=True, read_only=True)
 
     class Meta:
         model = SavingProduct
-        fields = '__all__'
-
-    
+        fields = [
+            'id', 'fin_prdt_cd', 'fin_prdt_nm', 'kor_co_nm', 'max_limit',
+            'join_deny', 'join_member', 'productinterest_set'
+        ]

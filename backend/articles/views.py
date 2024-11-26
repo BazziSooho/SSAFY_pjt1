@@ -6,9 +6,6 @@ from rest_framework import status
 from .models import Question, Answer
 from .serializers import QuestionSerializer, AnswerSerializer
 
-# URL 설정도 해주셔야 합니다!!!!!!!!!!!
-# URL 설정도 해주셔야 합니다!!!!!!!!!!!
-
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])                      # 현재 작성된 질문 목록(GET)과 새 질문 작성(POST) 페이지
 def question_list(request):
@@ -20,7 +17,7 @@ def question_list(request):
     elif request.method == 'POST':
         serializer = QuestionSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(author=request.user)
+            serializer.save(user=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,6 +48,6 @@ def create_answer(request, question_pk):
 
     serializer = AnswerSerializer(data=request.data)
     if serializer.is_valid():
-        serializer.save(question=question, author=request.user)
+        serializer.save(question=question)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
