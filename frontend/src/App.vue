@@ -29,7 +29,7 @@ const logout = () => {
 
       <!-- 로그인 상태에 따라 UI 변경 -->
       <template v-if="authStore.isLoggedIn">
-        <RouterLink to="/mypage">마이페이지</RouterLink>
+        <RouterLink to="#">마이페이지</RouterLink>
         <a href="/" @click.prevent="logout">로그아웃</a>
       </template>
       <template v-else>
@@ -37,7 +37,7 @@ const logout = () => {
         <RouterLink to="/accounts/signup">회원가입</RouterLink>
       </template>
 
-      <RouterLink to="/articles">문의게시판</RouterLink>
+      <RouterLink to="#">문의게시판</RouterLink>
     </nav>
   </header>
 
