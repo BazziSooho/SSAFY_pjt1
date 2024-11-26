@@ -47,14 +47,14 @@ class UserSaving(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     bank = models.CharField(max_length=50)
     product = models.TextField()
-    mtrt = models.FloatField()          # 만기후 이자율
+    mtrt = models.FloatField(null=True, blank=True)          # 만기후 이자율
     join_deny = models.IntegerField()   # {1:제한없음``, 3:일부제한}
     join_member = models.TextField()    # 1이 아닐때만 null=True
     max_limit = models.FloatField()     # 최대한도
     intr = models.FloatField()          # 본인이자율
     intr_rate_type = models.CharField(max_length=10, verbose_name='금리 유형')   # 금리유형/ 단리복리
     rsrv_type = models.CharField(max_length=10, verbose_name='적립유형')        # 적립 유형/ 자유형, 정액형
-    save_trm = models.IntegerField(verbose_name='저축기간')
+    save_trm = models.IntegerField(default=0, verbose_name='저축기간')
 
 
 class Recommendation(models.Model):

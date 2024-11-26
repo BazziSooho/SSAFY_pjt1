@@ -8,7 +8,7 @@ import SignupView from '@/views/SignupView.vue'
 import SavingAddView from '@/views/SavingAddView.vue'
 import SavingsList from '@/components/savings/SavingsList.vue'
 import OptionsList from '@/components/savings/OptionsList.vue'
-// import SupportView from '@/views/SupportView.vue'
+import RecommendView from '@/views/RecommendView.vue'
 // import ProfileView from '@/views/ProfileView.vue'
 // import MapView from '@/views/MapView.vue'
 
@@ -36,6 +36,11 @@ const router = createRouter({
       component: LoginView,
     },
     {
+      path: '/accounts/signup',
+      name: 'signup',
+      component: SignupView,
+    },
+    {
       path: '/savings/add',
       name: 'savingadd',
       component: SavingAddView,
@@ -54,9 +59,11 @@ const router = createRouter({
       props: (route) => ({ id: Number(route.params.id) }), // 숫자로 변환
     },    
     {
-      path: '/accounts/signup',
-      name: 'signup',
-      component: SignupView,
+      path: '/savings/recommend',
+      name: 'recommend',
+      component: RecommendView,
+      props: true,
+      meta: { requiresAuth: true },
     },
     // {
     //   path: '/support',

@@ -68,6 +68,8 @@
         <input type="text" v-model.lazy.trim="customInput.intr_rate_type" /><br />
         <label>적립 유형:</label>
         <input type="text" v-model.lazy.trim="customInput.rsrv_type" /><br />
+        <label>기간:</label>
+        <input type="number" v-model.lazy.trim="customInput.save_trm" /><br />
       </div>
     </div>
 
@@ -107,6 +109,7 @@ export default {
         max_limit: null,
         intr_rate_type: "",
         rsrv_type: "",
+        save_trm: ""
       }, // 직접 입력 데이터
     };
   },
@@ -165,6 +168,7 @@ export default {
           max_limit: Number(this.customInput.max_limit),
           intr_rate_type: this.customInput.intr_rate_type,
           rsrv_type: this.customInput.rsrv_type,
+          save_trm: this.customInput.save_trm,
           user_id: this.userId, // 유저 ID 전달 (로그인 상태에서 가져오기)
         });
       }
@@ -174,7 +178,7 @@ export default {
         payload.push({
           bank: this.selectedProduct.kor_co_nm || "알 수 없음", // 은행명 기본값 처리
           product: this.selectedProduct.fin_prdt_nm,
-          mtrt: this.selectedOption.save_trm,
+          mtrt: this.selectedOption.mtrt,
           intr: Number(this.selectedOption.customIntr),
           join_deny:
             this.selectedProduct.join_deny || 0, // 기본값 처리
@@ -186,6 +190,8 @@ export default {
             this.selectedOption.intr_rate_type || "단리", // 기본값 처리
           rsrv_type:
             this.selectedOption.rsrv_type || "일반", // 기본값 처리
+          save_trm:
+            this.selectedOption.save_trm || 0,
         });
       }
 

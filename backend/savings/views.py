@@ -85,26 +85,8 @@ def high_score(pk):       # 유저가 선택한 적금 정보대로
         if score > high_score:
             high_score = score
             serializer = SavingProductWithInterestSerializer(fin_prdt_cd=product)
-        
-        
+                
     return serializer
-
-# Create your views here.
-
-
-@api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def user_saving(request):      # 입력받는 창 & 입력 받은 데이터 전송
-    serializer = UserSavingSerializer()
-    if request.method == 'GET':
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    elif request.method == 'POST':
-        # 요청 데이터를 시리얼라이저로 전달
-        serializer = UserSavingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)  # 현재 로그인한 유저 정보와 함께 저장
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])         # 적금 추천 해달라하는 창 - 어떤 적금 할건지 선택해서 추천 버튼 꾹
@@ -117,8 +99,10 @@ def savings_recommendation(request):
     else:                                               # 적금이 없으면 아래 메세지를 띄우면서 추천 버튼 비활성화해야함
         return Response({"message": "추천에 필요한 본인의 적금 정보를 먼저 입력해주세요."}, status=status.HTTP_204_NO_CONTENT)
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
+
+
 def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     api_url = 'http://finlife.fss.or.kr/finlifeapi/savingProductsSearch.json'
     api_key = '1c1cffc2a23cbe61a88b8ea749f7a10a'
@@ -193,17 +177,27 @@ def savingproductinterest(request, product_id):
         return JsonResponse({"error": "해당 상품을 찾을 수 없습니다."}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
-    
+
+
+# 개인 적금정보 조회 & usersaving에 내 적금정보 추가
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])              # 개인 적금정보 조회             
+def my_savings(request):
+    user = request.user  # 현재 로그인된 사용자 가져오기
+    savings = UserSaving.objects.filter(user=user)  # 로그인된 사용자의 데이터만 필터링
+    data = list(savings.values('id', 'bank', 'product', 'mtrt', 'intr', 'save_trm'))
+    return Response(data, status=200)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def save_usersaving(request):
+def user_saving(request):      # 입력받는 창 & 입력 받은 데이터 전송
     try:
         data = request.data
         user = request.user
 
         for item in data:
-            print("Saving data:", item)  # 디버깅 출력
             UserSaving.objects.create(
                 user_id=user.id,
                 bank=item.get('bank'),
@@ -214,10 +208,12 @@ def save_usersaving(request):
                 join_member=item.get('join_member'),
                 max_limit=item.get('max_limit'),
                 intr_rate_type=item.get('intr_rate_type'),
-                rsrv_type=item.get('rsrv_type')
+                rsrv_type=item.get('rsrv_type'),
+                save_trm=item.get('save_trm', 0),
             )
 
         return Response({"message": "저장되었습니다."}, status=201)
     except Exception as e:
         print("Error:", str(e))  # 오류 출력
         return Response({"error": str(e)}, status=400)
+

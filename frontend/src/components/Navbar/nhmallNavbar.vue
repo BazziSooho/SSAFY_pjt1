@@ -12,7 +12,8 @@
           <li><a href="#">추천특가</a></li>
           <li><a href="#">기획전</a></li>
           <!-- 이벤트링크 추가할것 -->
-          <li><a href="/savings/add">적금이율 이벤트</a></li> 
+          <li><a href="/savings/add">내 적금정보 추가하기</a></li> 
+          <li><RouterLink to="/savings/recommend">적금 추천받기</RouterLink></li>
         </ul>
   
       </div>
