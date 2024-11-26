@@ -11,7 +11,7 @@ from .serializers import QuestionSerializer, AnswerSerializer
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])                      # 현재 작성된 질문 목록(GET)과 새 질문 작성(POST) 페이지
-def question_list_create(request):
+def question_list(request):
     if request.method == 'GET':
         questions = Question.objects.all().order_by('-views')      # 조회수 순으로 내림차순정렬해보자
         serializer = QuestionSerializer(questions, many=True)

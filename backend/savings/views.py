@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import render
+from django.http import JsonResponse
 from .models import SavingProduct, ProductInterest, UserSaving
 from .serializers import UserSavingSerializer, ProductInterestSerializer, SavingProductWithInterestSerializer, SavingProductSerializer
 from accounts.serializers import UserWithSavingSerializer
@@ -114,26 +115,24 @@ def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     }
 
     response = requests.get(api_url, params=params)
-    data = response.json()
-    print(data)
+    if response.status_code == 200:
+        api_data = response.json()
+    else:
+        return JsonResponse({"error": "적금 정보를 불러오는 데 실패했습니다."}, status=500)
+    
+    # savings = data['result']['baseList']
+    # saving_list = []
+    # for saving in savings:
+    #     new_data = {"model": "savings.savingproduct"}
+    #     new_data['fields'] = saving
+    #     saving_list.append(new_data)
 
-    # # print(data['result']['baseList'])
-    savings = data['result']['baseList']
-    saving_list = []
-
-    for saving in savings:
-        new_data = {"model": "savings.savingproduct"}
-        new_data['fields'] = saving
-        saving_list.append(new_data)
-    print(saving_list)
-
-    rate_list = []
-    rates = data['result']['optionList']
-    for rate in rates:
-        rate_data = {"model": "savings.productinterest"}
-        rate_data['fields'] = rate
-        rate_list.append(rate_data)
-
+    # rate_list = []
+    # rates = data['result']['optionList']
+    # for rate in rates:
+    #     rate_data = {"model": "savings.productinterest"}
+    #     rate_data['fields'] = rate
+    #     rate_list.append(rate_data)
 
 
     interest = request.data.get('intr')
@@ -147,10 +146,13 @@ def recommend_saving(request):     # 꾹햇을때 적금 추천하는 view
     # 3. 만기 시 최대 이익 추천 - 단리/복리에 따라 계산달리해서 추천
     max_serializer = max_profit()
     
-    return Response({
-        'high_score': high_score_serializer,
-        'random_data': random_serializer,
-        'max_data': max_serializer,
+    
+
+    return JsonResponse({
+        'high_score': high_score_serializer.data,
+        'random_data': random_serializer.data,
+        'max_data': max_serializer.data,
+        '시중 적금데이터': api_data,
         }, 
         status=status.HTTP_200_OK)
 
