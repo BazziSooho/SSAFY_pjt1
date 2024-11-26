@@ -53,7 +53,8 @@ class UserSaving(models.Model):
     max_limit = models.FloatField()     # 최대한도
     intr = models.FloatField()          # 본인이자율
     intr_rate_type = models.CharField(max_length=10, verbose_name='금리 유형')   # 금리유형/ 단리복리
-    rsrv_type = models.CharField(max_length=10, verbose_name='적립유형')        # 적립 유형/ 자유형, 정액형  
+    rsrv_type = models.CharField(max_length=10, verbose_name='적립유형')        # 적립 유형/ 자유형, 정액형
+    save_trm = models.IntegerField(verbose_name='저축기간')
 
 
 class Recommendation(models.Model):
