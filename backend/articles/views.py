@@ -1,3 +1,4 @@
+from django.db.models import F
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
@@ -12,7 +13,7 @@ from .serializers import QuestionSerializer, AnswerSerializer
 @permission_classes([IsAuthenticated])                      # 현재 작성된 질문 목록(GET)과 새 질문 작성(POST) 페이지
 def question_list_create(request):
     if request.method == 'GET':
-        questions = Question.objects.all().order_by('-created_at')
+        questions = Question.objects.all().order_by('-views')      # 조회수 순으로 내림차순정렬해보자
         serializer = QuestionSerializer(questions, many=True)
         return Response(serializer.data)
 
@@ -24,13 +25,19 @@ def question_list_create(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def question_detail(request, pk):                   # 
+def question_detail(request, pk):                   #       조회수를 넣어보자
     try:
         question = Question.objects.get(pk=pk)
     except Question.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
+        # 조회수 증가
+        Question.objects.filter(pk=pk).update(views=F('views') + 1)     # db 값에 직접 접근할때 유용한 F 메서드
+        
+        # 업데이트된 질문 객체 다시 가져오기
+        question.refresh_from_db()                                      # models.Model의 내장 메서드 
+        
         serializer = QuestionSerializer(question)
         return Response(serializer.data)
 
